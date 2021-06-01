@@ -13,6 +13,7 @@
     "better-react-spinkit": "^2.0.4",
     "email-validator": "^2.0.4",
     "firebase": "^8.6.3",
+    "fp-ts": "^2.10.5",
     "moment": "^2.29.1",
     "next": "10.2.3",
     "react": "17.0.2",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/express": "^4.17.12",
     "@types/react": "^17.0.8",
+    "@types/styled-components": "^5.1.9",
     "@typescript-eslint/eslint-plugin": "^4.25.0",
     "@typescript-eslint/parser": "^4.25.0",
     "eslint": "^7.27.0",
