@@ -1,17 +1,20 @@
 import firebase from "firebase";
 
-export interface User extends firebase.User {
-  lastSeen: firebase.firestore.FieldValue | string;
+type FieldValue = firebase.firestore.FieldValue;
+type Timestamp = firebase.firestore.Timestamp;
+
+export interface User<MODE extends "create" | "read"> extends firebase.User {
+  lastSeen: MODE extends "create" ? FieldValue : Timestamp;
 }
 
-export interface Chat {
+export interface Chat<MODE extends "create" | "read"> {
   users: string[];
-  messages: Message[];
+  messages: Message<MODE>[];
 }
 
-export interface Message {
+export interface Message<MODE extends "create" | "read"> {
   message: string;
   photoURL: string;
-  timestamp: string;
+  timestamp: MODE extends "create" ? FieldValue : Timestamp;
   user: string;
 }

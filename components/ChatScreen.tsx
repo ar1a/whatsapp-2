@@ -13,11 +13,13 @@ import { MouseEventHandler, useRef, useState } from "react";
 import firebase from "firebase";
 import getRecipientEmail from "../utils/getRecipientEmail";
 import TimeAgo from "timeago-react";
+import { Chat, Message as MessageType } from "../types/types";
 
 interface Props {
-  chat: any;
-  messages: string;
+  chat: Chat;
+  messages: MessageType[];
 }
+
 export default function ChatScreen({ chat, messages }: Props) {
   const [user] = useAuthState(auth);
   const [input, setInput] = useState("");

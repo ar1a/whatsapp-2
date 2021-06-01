@@ -1,14 +1,16 @@
-import { GetServerSideProps, NextPageContext } from "next";
+import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import ChatScreen from "../../components/ChatScreen";
 import Sidebar from "../../components/Sidebar";
-import { auth, db } from "../../firebase";
+import { auth } from "../../firebase";
+import { Chat, Message } from "../../types/types";
+import db, { converter } from "../../utils/db";
 import getRecipientEmail from "../../utils/getRecipientEmail";
 interface Props {
-  chat: any;
-  messages: any;
+  chat: Chat<"read">;
+  messages: Message<"read">[];
 }
 export default function Chat({ chat, messages }: Props) {
   const [user] = useAuthState(auth);
@@ -41,10 +43,16 @@ const ChatContainer = styled.div`
 `;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ref = db.collection("chats").doc(context.params.id as string);
+  if (
+    context?.params?.id === undefined || // assert if undefined
+    typeof context.params.id === "object" // assert if string[] or string
+  )
+    return { redirect: { permanent: false, destination: "/" } };
+  const ref = db.chatsRead.doc(context.params.id);
 
   const messagesRes = await ref
     .collection("messages")
+    .withConverter(converter<Message<"read">>())
     .orderBy("timestamp", "asc")
     .get();
 
@@ -53,7 +61,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       id: doc.id,
       ...doc.data(),
     }))
-    .map((message: any) => ({
+    .map((message) => ({
       ...message,
       timestamp: message.timestamp.toDate().getTime(),
     }));
