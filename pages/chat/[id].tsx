@@ -8,7 +8,7 @@ import { auth } from "../../firebase";
 import { Chat as ChatType, Message } from "../../types/types";
 import db, { converter } from "../../utils/db";
 import getRecipientEmail from "../../utils/getRecipientEmail";
-import firebase from "firebase";
+import firebase from "firebase/app";
 interface Props {
   chat: ChatType<"read">;
   messages: string;

@@ -1,5 +1,6 @@
 import { db as firestore } from "../firebase";
-import firebase from "firebase";
+import firebase from "firebase/app";
+import "firebase/firestore";
 import { Chat, User } from "../types/types";
 
 export const converter = <T>() => ({
