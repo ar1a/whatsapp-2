@@ -2,12 +2,18 @@ import moment from "moment";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import { auth } from "../firebase";
+import { Message as MessageType } from "../types/types";
 interface Props {
-  user: any;
-  message: any;
+  user: string;
+  message: MessageType<"read">;
 }
 export default function Message({ user, message }: Props) {
   const [loggedInUser] = useAuthState(auth);
+
+  if (!loggedInUser)
+    return (
+      <div>How are you here? You should already be logged in - Message</div>
+    );
 
   const TypeOfMessage = user === loggedInUser.email ? Sender : Reciever;
   return (
@@ -15,7 +21,9 @@ export default function Message({ user, message }: Props) {
       <TypeOfMessage>
         {message.message}
         <Timestamp>
-          {message.timestamp ? moment(message.timestamp).format("LT") : "..."}
+          {message.timestamp
+            ? moment(message.timestamp.toDate().getTime()).format("LT")
+            : "..."}
         </Timestamp>
       </TypeOfMessage>
     </Container>

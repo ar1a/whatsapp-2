@@ -5,15 +5,29 @@ import styled from "styled-components";
 import ChatScreen from "../../components/ChatScreen";
 import Sidebar from "../../components/Sidebar";
 import { auth } from "../../firebase";
-import { Chat, Message } from "../../types/types";
+import { Chat as ChatType, Message } from "../../types/types";
 import db, { converter } from "../../utils/db";
 import getRecipientEmail from "../../utils/getRecipientEmail";
+import firebase from "firebase";
 interface Props {
-  chat: Chat<"read">;
-  messages: Message<"read">[];
+  chat: ChatType<"read">;
+  messages: string;
 }
 export default function Chat({ chat, messages }: Props) {
   const [user] = useAuthState(auth);
+
+  if (!user) return <div>How are you here? You should be logged in - [id]</div>;
+
+  const msgs: Message<"read">[] = JSON.parse(messages);
+  // sent from server it's just the values of Timestamp, and needs to be
+  // converted back into the Timestamp type.
+  // Disgusting, but...
+  const msgsFixed = msgs.map((msg) => ({
+    ...msg,
+    timestamp: firebase.firestore.Timestamp.fromMillis(
+      msg.timestamp.nanoseconds / 1_000_000
+    ),
+  }));
   return (
     <Container>
       <Head>
@@ -21,7 +35,7 @@ export default function Chat({ chat, messages }: Props) {
       </Head>
       <Sidebar />
       <ChatContainer>
-        <ChatScreen chat={chat} messages={messages} />
+        <ChatScreen chat={chat} messages={msgsFixed} />
       </ChatContainer>
     </Container>
   );
@@ -56,15 +70,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     .orderBy("timestamp", "asc")
     .get();
 
-  const messages = messagesRes.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-    .map((message) => ({
-      ...message,
-      timestamp: message.timestamp.toDate().getTime(),
-    }));
+  const messages = messagesRes.docs.map((doc) => ({
+    ...doc.data(),
+    id: doc.id,
+  }));
 
   const chatRes = await ref.get();
   const chat = {

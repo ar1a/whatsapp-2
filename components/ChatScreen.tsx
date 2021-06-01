@@ -2,7 +2,7 @@ import { Avatar, IconButton } from "@material-ui/core";
 import { useRouter } from "next/router";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import AttachFileIcon from "@material-ui/icons/AttachFile";
 import { useCollection } from "react-firebase-hooks/firestore";
@@ -14,29 +14,30 @@ import firebase from "firebase";
 import getRecipientEmail from "../utils/getRecipientEmail";
 import TimeAgo from "timeago-react";
 import { Chat, Message as MessageType } from "../types/types";
+import db from "../utils/db";
 
 interface Props {
-  chat: Chat;
-  messages: MessageType[];
+  chat: Chat<"read">;
+  messages: MessageType<"read">[];
 }
 
 export default function ChatScreen({ chat, messages }: Props) {
   const [user] = useAuthState(auth);
   const [input, setInput] = useState("");
   const router = useRouter();
-  const endOfMessagesRef = useRef(null);
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const [messagesSnapshot] = useCollection(
-    db
-      .collection("chats")
+    db.chatsRead
       .doc(router.query.id as string)
       .collection("messages")
       .orderBy("timestamp", "asc")
   );
 
   const [recipientSnapshot] = useCollection(
-    db
-      .collection("users")
-      .where("email", "==", getRecipientEmail(chat.users, user))
+    //  should already be logged in, and can't assert because it's before react
+    //  hooks
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    db.usersRead.where("email", "==", getRecipientEmail(chat.users, user!))
   );
 
   const showMessages = () => {
@@ -45,22 +46,20 @@ export default function ChatScreen({ chat, messages }: Props) {
         <Message
           key={message.id}
           user={message.data().user}
-          message={{
-            ...message.data(),
-            timestamp: message.data().timestamp?.toDate().getTime(),
-          }}
+          message={message.data() as MessageType<"read">}
         />
       ));
     } else {
-      return JSON.parse(messages).map((message) => (
+      return messages.map((message) => (
         <Message key={message.id} user={message.user} message={message} />
       ));
     }
   };
 
   const scrollToBottom = () => {
+    if (endOfMessagesRef.current === null) return;
     endOfMessagesRef.current.scrollIntoView({
-      behaviour: "smooth",
+      behavior: "smooth",
       block: "start",
     });
   };
@@ -68,26 +67,34 @@ export default function ChatScreen({ chat, messages }: Props) {
   const sendMessage: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.preventDefault();
 
-    db.collection("users").doc(user.uid).set(
+    // should never fail, user is asserted to be there from _app.tsx
+    db.usersWrite.doc(user?.uid).set(
       {
         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
     );
 
-    db.collection("chats")
+    db.chatsWrite
       .doc(router.query.id as string)
       .collection("messages")
       .add({
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         message: input,
-        user: user.email,
-        photoURL: user.photoURL,
+        user: user?.email,
+        photoURL: user?.photoURL,
       });
 
     setInput("");
     scrollToBottom();
   };
+
+  if (!user)
+    return (
+      <div>
+        How did you get here? You should already be logged in - ChatScreen
+      </div>
+    );
 
   const recipientEmail = getRecipientEmail(chat.users, user);
   const recipient = recipientSnapshot?.docs?.[0]?.data();
@@ -131,7 +138,7 @@ export default function ChatScreen({ chat, messages }: Props) {
       </MessageContainer>
       <InputContainer>
         <InsertEmoticonIcon />
-        <Input value={input} onChange={(e: any) => setInput(e.target.value)} />
+        <Input value={input} onChange={(e) => setInput(e.target.value)} />
         <button type="submit" hidden disabled={!input} onClick={sendMessage}>
           Send Message
         </button>

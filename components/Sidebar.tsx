@@ -4,17 +4,24 @@ import ChatIcon from "@material-ui/icons/Chat";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import SearchIcon from "@material-ui/icons/Search";
 import * as EmailValidator from "email-validator";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollection } from "react-firebase-hooks/firestore";
 import Chat from "./Chat";
+import db from "../utils/db";
 
 export default function Sidebar() {
   const [user] = useAuthState(auth);
-  const userChatRef = db
-    .collection("chats")
-    .where("users", "array-contains", user.email);
+
+  const userChatRef = db.chatsRead.where(
+    "users",
+    "array-contains",
+    user?.email // should never fail, user is asserted to exist in _app
+  );
   const [chatsSnapshot] = useCollection(userChatRef);
+
+  if (!user)
+    return <div>How are you here? You should be logged in - Sidebar</div>;
   const createChat = () => {
     const input = prompt(
       "Please enter an email address for the user you wish to chat with"
@@ -27,9 +34,8 @@ export default function Sidebar() {
       !chatAlreadyExists(input) &&
       input !== user.email
     ) {
-      // TODO: Add chat into the db 'chats' collection
-      db.collection("chats").add({
-        users: [user.email, input],
+      db.chatsWrite.add({
+        users: [user.email || "", input],
       });
     }
   };
@@ -37,13 +43,17 @@ export default function Sidebar() {
   const chatAlreadyExists = (recipientEmail: string) =>
     !!chatsSnapshot?.docs.find(
       (chat) =>
-        chat.data().users.find((user) => user === recipientEmail)?.length > 0
+        chat.data().users.find((user: string) => user === recipientEmail)
+          ?.length > 0
     );
 
   return (
     <Container>
       <Header>
-        <UserAvatar src={user.photoURL} onClick={() => auth.signOut()} />
+        <UserAvatar
+          src={user.photoURL || undefined}
+          onClick={() => auth.signOut()}
+        />
 
         <IconsContainer>
           <IconButton>

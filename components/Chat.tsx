@@ -2,20 +2,25 @@ import { Avatar } from "@material-ui/core";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollection } from "react-firebase-hooks/firestore";
 import styled from "styled-components";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import getRecipientEmail from "../utils/getRecipientEmail";
 import { useRouter } from "next/router";
+import db from "../utils/db";
 interface Props {
   id: string;
-  users: Array<any>;
+  users: string[];
 }
 export default function Chat({ id, users }: Props) {
   const [user] = useAuthState(auth);
-  const recipientEmail = getRecipientEmail(users, user);
+
+  //  should already be logged in, and can't assert because it's before react
+  //  hooks
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const recipientEmail = getRecipientEmail(users, user!);
   const router = useRouter();
 
   const [recipientSnapshot] = useCollection(
-    db.collection("users").where("email", "==", recipientEmail)
+    db.usersRead.where("email", "==", recipientEmail)
   );
 
   const enterChat = () => {
