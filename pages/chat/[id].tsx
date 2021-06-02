@@ -1,6 +1,5 @@
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import ChatScreen from "../../components/ChatScreen";
 import Sidebar from "../../components/Sidebar";
@@ -9,37 +8,42 @@ import { Chat as ChatType, Message } from "../../types/types";
 import db, { converter } from "../../utils/db";
 import getRecipientEmail from "../../utils/getRecipientEmail";
 import firebase from "firebase/app";
+import { useAuthState } from "../../utils/useAuthState";
+import * as O from "fp-ts/Option";
+import { constant, pipe } from "fp-ts/lib/function";
 interface Props {
   chat: ChatType<"read">;
   messages: string;
 }
 export default function Chat({ chat, messages }: Props) {
-  // TODO: firebase.auth.Auth -> [Maybe<firebase.User>, boolean, Maybe<firebase.auth.Error>]
   const [user] = useAuthState(auth);
 
-  if (!user) return <div>How are you here? You should be logged in - [id]</div>;
-
-  // ? This will fail poorly, should we just accept that, or deal with it?
-  const msgs: Message<"read">[] = JSON.parse(messages);
-  // sent from server it's just the values of Timestamp, and needs to be
-  // converted back into the Timestamp type.
-  // Disgusting, but...
-  const msgsFixed = msgs.map((msg) => ({
-    ...msg,
-    timestamp: firebase.firestore.Timestamp.fromMillis(
-      msg.timestamp.nanoseconds / 1_000_000
-    ),
-  }));
-  return (
-    <Container>
-      <Head>
-        <title>Chat with {getRecipientEmail(user)(chat.users)}</title>
-      </Head>
-      <Sidebar />
-      <ChatContainer>
-        <ChatScreen chat={chat} messages={msgsFixed} />
-      </ChatContainer>
-    </Container>
+  return pipe(
+    user,
+    O.map((user) => ({ user, msgs: JSON.parse(messages) })),
+    O.map(({ user, msgs }) => ({
+      user,
+      msgs: msgs.map((msg: Message<"read">) => ({
+        ...msg,
+        timestamp: firebase.firestore.Timestamp.fromMillis(
+          msg.timestamp.nanoseconds / 1_000_000
+        ),
+      })),
+    })),
+    O.map(({ user, msgs }) => (
+      <Container key={`${chat.users[0]}-${chat.users[1]}`}>
+        <Head>
+          <title>Chat with {getRecipientEmail(user)(chat.users)}</title>
+        </Head>
+        <Sidebar />
+        <ChatContainer>
+          <ChatScreen chat={chat} messages={msgs} />
+        </ChatContainer>
+      </Container>
+    )),
+    O.getOrElse(
+      constant(<div>How are you here? You should be logged in - [id]</div>)
+    )
   );
 }
 

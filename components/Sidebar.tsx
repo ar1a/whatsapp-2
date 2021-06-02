@@ -5,13 +5,13 @@ import MoreVertIcon from "@material-ui/icons/MoreVert";
 import SearchIcon from "@material-ui/icons/Search";
 import * as EmailValidator from "email-validator";
 import { auth } from "../firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollection } from "react-firebase-hooks/firestore";
 import Chat from "./Chat";
 import db from "../utils/db";
+import { useAuthStateUnsafe } from "../utils/useAuthState";
 
 export default function Sidebar() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthStateUnsafe(auth);
 
   const userChatRef = db.chatsRead.where(
     "users",

@@ -1,32 +1,37 @@
 import moment from "moment";
-import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import { auth } from "../firebase";
 import { Message as MessageType } from "../types/types";
+import { useAuthState } from "../utils/useAuthState";
+import * as O from "fp-ts/Option";
+import { constant, pipe } from "fp-ts/lib/function";
 interface Props {
   user: string;
   message: MessageType<"read">;
 }
 export default function Message({ user, message }: Props) {
-  const [loggedInUser] = useAuthState(auth);
+  const [loggedInUserM] = useAuthState(auth);
 
-  if (!loggedInUser)
-    return (
-      <div>How are you here? You should already be logged in - Message</div>
-    );
-
-  const TypeOfMessage = user === loggedInUser.email ? Sender : Reciever;
-  return (
-    <Container>
-      <TypeOfMessage>
-        {message.message}
-        <Timestamp>
-          {message.timestamp
-            ? moment(message.timestamp.toDate().getTime()).format("LT")
-            : "..."}
-        </Timestamp>
-      </TypeOfMessage>
-    </Container>
+  return pipe(
+    loggedInUserM,
+    O.map((loggedInUser) => (user === loggedInUser.email ? Sender : Reciever)),
+    O.map((TypeOfMessage) => (
+      <Container key={`${message.id}-M`}>
+        <TypeOfMessage>
+          {message.message}
+          <Timestamp>
+            {message.timestamp
+              ? moment(message.timestamp.toDate().getTime()).format("LT")
+              : "..."}
+          </Timestamp>
+        </TypeOfMessage>
+      </Container>
+    )),
+    O.getOrElse(
+      constant(
+        <div>How are you here? You should already be logged in - Message</div>
+      )
+    )
   );
 }
 

@@ -1,6 +1,5 @@
 import { Avatar, IconButton } from "@material-ui/core";
 import { useRouter } from "next/router";
-import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import { auth } from "../firebase";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
@@ -16,6 +15,7 @@ import getRecipientEmail from "../utils/getRecipientEmail";
 import TimeAgo from "timeago-react";
 import { Chat, Message as MessageType } from "../types/types";
 import db from "../utils/db";
+import { useAuthStateUnsafe } from "../utils/useAuthState";
 
 interface Props {
   chat: Chat<"read">;
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export default function ChatScreen({ chat, messages }: Props) {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthStateUnsafe(auth);
   const [input, setInput] = useState("");
   const router = useRouter();
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
