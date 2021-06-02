@@ -14,10 +14,12 @@ interface Props {
   messages: string;
 }
 export default function Chat({ chat, messages }: Props) {
+  // TODO: firebase.auth.Auth -> [Maybe<firebase.User>, boolean, Maybe<firebase.auth.Error>]
   const [user] = useAuthState(auth);
 
   if (!user) return <div>How are you here? You should be logged in - [id]</div>;
 
+  // ? This will fail poorly, should we just accept that, or deal with it?
   const msgs: Message<"read">[] = JSON.parse(messages);
   // sent from server it's just the values of Timestamp, and needs to be
   // converted back into the Timestamp type.

@@ -9,6 +9,7 @@ export const converter = <T>() => ({
     snap.data() as T,
 });
 
+// TODO: string -> IO<firebase.firestore.ColletionReference<T>>
 const dataPoint = <T>(collectionPath: string) =>
   firestore.collection(collectionPath).withConverter(converter<T>());
 
