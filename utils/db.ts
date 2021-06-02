@@ -3,7 +3,9 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import { Chat, User } from "../types/types";
 
-export const converter = <T>() => ({
+export const converter = <
+  T
+>(): firebase.firestore.FirestoreDataConverter<T> => ({
   toFirestore: (data: Partial<T>) => data,
   fromFirestore: (snap: firebase.firestore.QueryDocumentSnapshot) =>
     snap.data() as T,

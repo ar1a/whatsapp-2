@@ -16,7 +16,7 @@ export default function Chat({ id, users }: Props) {
   //  should already be logged in, and can't assert because it's before react
   //  hooks
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const recipientEmail = getRecipientEmail(users, user!);
+  const recipientEmail = getRecipientEmail(user!)(users);
   const router = useRouter();
 
   const [recipientSnapshot] = useCollection(

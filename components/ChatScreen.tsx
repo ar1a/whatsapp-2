@@ -38,7 +38,7 @@ export default function ChatScreen({ chat, messages }: Props) {
     //  should already be logged in, and can't assert because it's before react
     //  hooks
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    db.usersRead.where("email", "==", getRecipientEmail(chat.users, user!))
+    db.usersRead.where("email", "==", getRecipientEmail(user!)(chat.users))
   );
 
   const showMessages = () => {
@@ -97,7 +97,7 @@ export default function ChatScreen({ chat, messages }: Props) {
       </div>
     );
 
-  const recipientEmail = getRecipientEmail(chat.users, user);
+  const recipientEmail = getRecipientEmail(user)(chat.users);
   const recipient = recipientSnapshot?.docs?.[0]?.data();
 
   return (

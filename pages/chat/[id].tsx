@@ -33,7 +33,7 @@ export default function Chat({ chat, messages }: Props) {
   return (
     <Container>
       <Head>
-        <title>Chat with {getRecipientEmail(chat.users, user)}</title>
+        <title>Chat with {getRecipientEmail(user)(chat.users)}</title>
       </Head>
       <Sidebar />
       <ChatContainer>
