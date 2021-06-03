@@ -3,12 +3,12 @@ import "firebase/firestore";
 import "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAl6wRPRaTVYRh6pmYrEEQ_F45-9mO0d7Y",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_SECRET,
   authDomain: "whatsapp-2-db08a.firebaseapp.com",
   projectId: "whatsapp-2-db08a",
   storageBucket: "whatsapp-2-db08a.appspot.com",
   messagingSenderId: "181978566650",
-  appId: "1:181978566650:web:8e915b5e1bca3d9ea29e43",
+  appId: "1:181978566650:web:a3db06ca0340b0c6a29e43",
 };
 
 const app = !firebase.apps.length
