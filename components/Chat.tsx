@@ -6,6 +6,7 @@ import getRecipientEmail from "../utils/getRecipientEmail";
 import { useRouter } from "next/router";
 import db from "../utils/db";
 import { useAuthStateUnsafe } from "../utils/useAuthState";
+import { push } from "../utils/router";
 interface Props {
   id: string;
   users: string[];
@@ -24,10 +25,7 @@ export default function Chat({ id, users }: Props) {
     db.usersRead.where("email", "==", recipientEmail)
   );
 
-  const enterChat = () => {
-    // TODO: push :: string -> NextRouter -> Task<boolean>
-    router.push(`/chat/${id}`);
-  };
+  const enterChat = push(`/chat/${id}`)(router);
 
   // TODO: O.fromNullable
   const recipient = recipientSnapshot?.docs?.[0]?.data();
