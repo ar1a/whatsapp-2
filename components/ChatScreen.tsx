@@ -41,6 +41,7 @@ export default function ChatScreen({ chat, messages }: Props) {
     db.usersRead.where("email", "==", getRecipientEmail(user!)(chat.users))
   );
 
+  // TODO: O.fromNullable messagesSnapshot
   const showMessages = () => {
     if (messagesSnapshot) {
       return messagesSnapshot.docs.map((message) => (
@@ -58,6 +59,7 @@ export default function ChatScreen({ chat, messages }: Props) {
   };
 
   const scrollToBottom = () => {
+    // TODO: O.fromNullable???
     if (endOfMessagesRef.current === null) return;
     endOfMessagesRef.current.scrollIntoView({
       behavior: "smooth",
@@ -86,10 +88,12 @@ export default function ChatScreen({ chat, messages }: Props) {
         photoURL: user?.photoURL,
       });
 
+    // TODO: string -> IO<void>?
     setInput("");
     scrollToBottom();
   };
 
+  // TODO: O.fromNullable?
   if (!user)
     return (
       <div>
@@ -98,6 +102,7 @@ export default function ChatScreen({ chat, messages }: Props) {
     );
 
   const recipientEmail = getRecipientEmail(user)(chat.users);
+  // TODO: O.fromNullable?
   const recipient = recipientSnapshot?.docs?.[0]?.data();
 
   return (

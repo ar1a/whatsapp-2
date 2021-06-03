@@ -25,9 +25,11 @@ export default function Chat({ id, users }: Props) {
   );
 
   const enterChat = () => {
+    // TODO: push :: string -> NextRouter -> Task<boolean>
     router.push(`/chat/${id}`);
   };
 
+  // TODO: O.fromNullable
   const recipient = recipientSnapshot?.docs?.[0]?.data();
   return (
     <Container onClick={enterChat}>

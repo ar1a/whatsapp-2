@@ -20,6 +20,7 @@ export default function Sidebar() {
   );
   const [chatsSnapshot] = useCollection(userChatRef);
 
+  // TODO: O.fromNullable?
   if (!user)
     return <div>How are you here? You should be logged in - Sidebar</div>;
   const createChat = () => {
@@ -27,6 +28,7 @@ export default function Sidebar() {
       "Please enter an email address for the user you wish to chat with"
     );
 
+    // TODO: O.fromNullable?
     if (!input) return;
 
     if (
