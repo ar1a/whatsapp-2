@@ -7,6 +7,8 @@ import { useRouter } from "next/router";
 import db from "../utils/db";
 import { useAuthStateUnsafe } from "../utils/useAuthState";
 import { push } from "../utils/router";
+import * as O from "fp-ts/Option";
+import { constant, pipe } from "fp-ts/lib/function";
 interface Props {
   id: string;
   users: string[];
@@ -21,14 +23,20 @@ export default function Chat({ id, users }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const recipientEmail = getRecipientEmail(user!)(users);
 
-  const [recipientSnapshot] = useCollection(
+  const [recipientSnapshotUnsafe] = useCollection(
     db.usersRead.where("email", "==", recipientEmail)
   );
 
   const enterChat = push(`/chat/${id}`)(router);
 
-  // TODO: O.fromNullable
-  const recipient = recipientSnapshot?.docs?.[0]?.data();
+  const recipientSnapshot = O.fromNullable(recipientSnapshotUnsafe);
+
+  const recipient = pipe(
+    recipientSnapshot,
+    O.match(constant(null), (recipientSnapshot) =>
+      recipientSnapshot.docs?.[0]?.data()
+    )
+  );
   return (
     <Container onClick={enterChat}>
       {recipient ? (
