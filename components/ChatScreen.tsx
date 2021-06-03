@@ -16,6 +16,8 @@ import TimeAgo from "timeago-react";
 import { Chat, Message as MessageType } from "../types/types";
 import db from "../utils/db";
 import { useAuthStateUnsafe } from "../utils/useAuthState";
+import * as O from "fp-ts/Option";
+import { constant, pipe } from "fp-ts/lib/function";
 
 interface Props {
   chat: Chat<"read">;
@@ -27,35 +29,41 @@ export default function ChatScreen({ chat, messages }: Props) {
   const [input, setInput] = useState("");
   const router = useRouter();
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
-  const [messagesSnapshot] = useCollection(
+  const [messagesSnapshotUnsafe] = useCollection(
     db.chatsRead
       .doc(router.query.id as string)
       .collection("messages")
       .orderBy("timestamp", "asc")
   );
 
-  const [recipientSnapshot] = useCollection(
+  const [recipientSnapshotUnsafe] = useCollection(
     //  should already be logged in, and can't assert because it's before react
     //  hooks
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     db.usersRead.where("email", "==", getRecipientEmail(user!)(chat.users))
   );
 
-  // TODO: O.fromNullable messagesSnapshot
+  const messagesSnapshot = O.fromNullable(messagesSnapshotUnsafe);
+  const recipientSnapshot = O.fromNullable(recipientSnapshotUnsafe);
+
   const showMessages = () => {
-    if (messagesSnapshot) {
-      return messagesSnapshot.docs.map((message) => (
-        <Message
-          key={message.id}
-          user={message.data().user}
-          message={message.data() as MessageType<"read">}
-        />
-      ));
-    } else {
-      return messages.map((message) => (
-        <Message key={message.id} user={message.user} message={message} />
-      ));
-    }
+    return pipe(
+      messagesSnapshot,
+      O.match(
+        () =>
+          messages.map((message) => (
+            <Message key={message.id} user={message.user} message={message} />
+          )),
+        (messagesSnapshot) =>
+          messagesSnapshot.docs.map((message) => (
+            <Message
+              key={message.id}
+              user={message.data().user}
+              message={message.data() as MessageType<"read">}
+            />
+          ))
+      )
+    );
   };
 
   const scrollToBottom = () => {
@@ -102,8 +110,13 @@ export default function ChatScreen({ chat, messages }: Props) {
     );
 
   const recipientEmail = getRecipientEmail(user)(chat.users);
-  // TODO: O.fromNullable?
-  const recipient = recipientSnapshot?.docs?.[0]?.data();
+
+  const recipient = pipe(
+    recipientSnapshot,
+    O.match(constant(null), (recipientSnapshot) =>
+      recipientSnapshot.docs?.[0]?.data()
+    )
+  );
 
   return (
     <Container>
@@ -115,7 +128,7 @@ export default function ChatScreen({ chat, messages }: Props) {
         )}
         <HeaderInformation>
           <h3>{recipientEmail}</h3>
-          {recipientSnapshot ? (
+          {O.isSome(recipientSnapshot) ? (
             <p>
               Last active:{" "}
               {recipient?.lastSeen?.toDate() ? (
